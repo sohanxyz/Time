@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Full Screen Clock</title>
     <style>
         /* CSS কোড */
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
-        /* Digital-7 ফন্ট যদি সিস্টেমে না থাকে, তবে ফলব্যাক হিসেবে অন্য ফন্ট ব্যবহার হবে */
 
         * {
             box-sizing: border-box;
@@ -18,17 +17,17 @@
         html, body {
             height: 100%;
             width: 100%;
-            background: #000000; /* ১০০% কালো ব্যাকগ্রাউন্ড */
+            background: #000000;
             color: #ffffff;
-            font-family: 'Roboto Mono', monospace; /* ডিফল্ট ফন্ট */
-            overflow: hidden; /* স্ক্রলবার হাইড করার জন্য */
-            -webkit-user-select: none; /* iOS */
-            -moz-user-select: none; /* Firefox */
-            -ms-user-select: none; /* IE/Edge */
-            user-select: none; /* Standard */
+            font-family: 'Roboto Mono', monospace;
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
-        /* সেটিংস পপ-আপ (Overlay) */
+        /* সেটিংস পপ-আপ */
         #settings-overlay {
             position: fixed;
             top: 0;
@@ -39,7 +38,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* নিশ্চিত করা এটি সবার উপরে আছে */
+            z-index: 1000;
         }
 
         #settings-box {
@@ -50,8 +49,8 @@
             width: 90%;
             max-width: 450px;
             font-family: Arial, sans-serif;
-            max-height: 90vh; /* সেটিংস বক্সের উচ্চতা নিয়ন্ত্রণ */
-            overflow-y: auto; /* প্রয়োজনে স্ক্রলবার */
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         #settings-box h2 {
@@ -63,13 +62,16 @@
         .setting-item {
             margin-bottom: 15px;
         }
-
         .setting-item label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
-        
+        .setting-item input[type="checkbox"] + label {
+            display: inline-block;
+            font-weight: normal;
+        }
+
         /* কালার প্যালেট */
         .color-palette {
             display: flex;
@@ -77,65 +79,26 @@
             gap: 10px;
             margin-bottom: 10px;
         }
-
         .color-box {
             width: 30px;
             height: 30px;
             border-radius: 4px;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: border-color 0.2s;
         }
-
-        .color-box.selected {
-            border-color: #007bff;
-        }
+        .color-box.selected { border-color: #007bff; }
 
         /* ইনপুট ফিল্ড স্টাইল */
-        input[type="color"],
-        select,
-        button,
-        input[type="range"] {
+        input[type="color"], select, button, input[type="range"] {
             width: 100%;
             padding: 8px;
             border-radius: 4px;
             border: 1px solid #ccc;
             margin-top: 5px;
         }
+        input[type="range"] { padding: 0; }
+        input[type="color"] { height: 40px; padding: 4px; }
         
-        input[type="range"] {
-            -webkit-appearance: none;
-            height: 8px;
-            background: #d3d3d3;
-            outline: none;
-            opacity: 0.7;
-            -webkit-transition: .2s;
-            transition: opacity .2s;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #007bff;
-            cursor: pointer;
-        }
-        
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #007bff;
-            cursor: pointer;
-        }
-
-        input[type="color"] {
-            height: 40px;
-        }
-
-        /* ওকে বাটন */
         #start-clock-btn {
             background-color: #007bff;
             color: white;
@@ -145,98 +108,115 @@
             padding: 12px;
             margin-top: 20px;
             font-size: 1.1em;
-            transition: background-color 0.3s ease;
         }
-
-        #start-clock-btn:hover {
-            background-color: #0056b3;
-        }
+        #start-clock-btn:hover { background-color: #0056b3; }
 
         /* মূল ঘড়ির ডিসপ্লে */
         #clock-display {
             width: 100%;
-            height: 100vh; /* Viewport Height (সম্পূর্ণ স্ক্রিন) */
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            cursor: grab; /* ডাবল-ক্লিক/স্ক্রল করার ইঙ্গিত */
-            transform-origin: center center; /* ফন্ট জুম করার জন্য */
-            transition: background-color 0.5s ease;
+            cursor: grab;
+        }
+
+        /* ব্যাটারি স্ট্যাটাস */
+        #battery-status {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 2.5vmin;
+            display: none; /* ডিফল্টভাবে লুকানো */
+            z-index: 50;
         }
         
-        /* ডিজিটাল ঘড়ির স্টাইল */
+        /* ডিজিটাল ঘড়ির স্টাইল (নতুন vmin সাইজিং) */
         #digital-clock-container {
-            display: flex; /* সময় এবং AM/PM কে একই লাইনে আনার জন্য */
-            align-items: baseline; /* AM/PM কে নিচে নামানোর জন্য */
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
         }
-
         #time {
-            font-size: 20vw; /* স্ক্রিনের প্রস্থের উপর ভিত্তি করে ফন্ট সাইজ */
+            /* * vmin ব্যবহার করা হয়েছে (Viewport Minimum)
+             * এটি প্রস্থ বা উচ্চতা, যেটি ছোট, তার উপর ভিত্তি করে সাইজ ঠিক করে।
+             * তাই ফন্ট আর কখনোই স্ক্রিনের বাইরে যাবে না।
+            */
+            font-size: 25vmin; 
             font-weight: bold;
             line-height: 1;
-            transform-origin: center center;
-            transition: font-size 0.1s ease-out; /* জুম এনিমেশন */
-            white-space: nowrap; /* সময় এক লাইনে রাখতে */
+            transition: font-size 0.1s ease-out;
+            white-space: nowrap;
         }
-
         #ampm {
-            font-size: 5vw; /* AM/PM এর ফন্ট সাইজ */
+            font-size: 6vmin; /* আনুপাতিকভাবে ছোট */
             font-weight: normal;
-            margin-left: 2vw; /* সময় থেকে কিছুটা দূরে */
-            align-self: flex-end; /* AM/PM কে নিচে নামানোর জন্য */
+            margin-left: 2vw;
+            align-self: flex-end;
         }
-
         #date {
-            font-size: 5vw;
+            font-size: 7vmin; /* আনুপাতিকভাবে ছোট */
             margin-top: 10px;
             text-align: center;
         }
 
-        /* এনালগ ঘড়ির স্টাইল */
+        /* * নতুন স্টাইলিশ এনালগ ঘড়ি
+        */
         #analog-clock {
-            width: 50vmin; /* ভিউপোর্ট এর ছোট দিক (উইথ বা হাইট) এর ৫০% */
-            height: 50vmin;
+            width: 70vmin;
+            height: 70vmin;
             border: 10px solid; /* রং জাভাস্ক্রিপ্ট থেকে আসবে */
             border-radius: 50%;
             position: relative;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            display: none; /* ডিফল্টভাবে লুকানো */
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+            display: none;
+            color: inherit; /* সেটিংস থেকে রঙ পাবে */
         }
-
+        
+        /* ঘড়ির ভেতরের সংখ্যা (১-১২) */
+        .number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 5vmin;
+            font-weight: bold;
+            padding-top: 2.5vmin; /* সংখ্যাগুলোকে ভেতরের দিকে আনা */
+        }
+        /* জাভাস্ক্রিপ্ট দিয়ে সংখ্যাগুলো ঘোরানো হবে */
+        
+        /* ঘড়ির কাঁটা */
         .hand {
             position: absolute;
             left: 50%;
             transform-origin: bottom center;
-            background-color: currentColor; /* ঘড়ির রঙের সাথে মিলবে */
+            background-color: currentColor;
             border-radius: 2px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
         }
-
         #hour-hand {
-            width: 4%;
+            width: 1.8%;
             height: 30%;
             top: 20%;
-            margin-left: -2%;
+            margin-left: -0.9%;
         }
-
         #minute-hand {
-            width: 3%;
+            width: 1.2%;
             height: 40%;
             top: 10%;
-            margin-left: -1.5%;
+            margin-left: -0.6%;
         }
-
         #second-hand {
-            width: 1.5%;
+            width: 0.6%;
             height: 45%;
             top: 5%;
-            margin-left: -0.75%;
-            background-color: red; /* সেকেন্ড হ্যান্ড লাল */
+            margin-left: -0.3%;
+            background-color: #FF4500; /* সেকেন্ড হ্যান্ড লাল */
         }
-        
         #center-dot {
-            width: 5%;
-            height: 5%;
+            width: 4%;
+            height: 4%;
             background-color: currentColor;
             border-radius: 50%;
             position: absolute;
@@ -249,15 +229,19 @@
         /* ফন্ট পরিবার */
         .font-roboto-mono { font-family: 'Roboto Mono', monospace; }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
-        .font-digital-7 { font-family: 'Digital-7', sans-serif; } /* Digital-7 ফন্ট যদি সিস্টেমে থাকে */
-        /* আপনি চাইলে এখানে আরো ফন্ট যোগ করতে পারেন */
+        .font-digital-7 { font-family: 'Digital-7', sans-serif; }
         
         /* ব্রাইটনেস কন্ট্রোল */
-        body.dim-0 { filter: brightness(0%); } /* এটি কালো ব্যাকগ্রাউন্ডে কাজ করবে না */
-        body.dim-25 { filter: brightness(25%); }
-        body.dim-50 { filter: brightness(50%); }
-        body.dim-75 { filter: brightness(75%); }
-        body.dim-100 { filter: brightness(100%); }
+        #main-display-wrapper {
+            width: 100%;
+            height: 100%;
+            transition: filter 0.3s ease;
+        }
+        #main-display-wrapper.dim-0 { filter: brightness(0%); }
+        #main-display-wrapper.dim-25 { filter: brightness(25%); }
+        #main-display-wrapper.dim-50 { filter: brightness(50%); }
+        #main-display-wrapper.dim-75 { filter: brightness(75%); }
+        #main-display-wrapper.dim-100 { filter: brightness(100%); }
 
     </style>
 </head>
@@ -271,8 +255,13 @@
                 <label for="clock-color">১. ঘড়ির কালার সিলেক্ট:</label>
                 <div class="color-palette">
                     <div class="color-box" style="background-color: #FFFFFF;" data-color="#FFFFFF"></div>
-                    <div class="color-box" style="background-color: #00BFFF;" data-color="#00BFFF"></div> <div class="color-box" style="background-color: #32CD32;" data-color="#32CD32"></div> <div class="color-box" style="background-color: #FF4500;" data-color="#FF4500"></div> <div class="color-box" style="background-color: #DA70D6;" data-color="#DA70D6"></div> <div class="color-box" style="background-color: #FFFF00;" data-color="#FFFF00"></div> <input type="color" id="clock-color" value="#FFFFFF">
+                    <div class="color-box" style="background-color: #00BFFF;" data-color="#00BFFF"></div> 
+                    <div class="color-box" style="background-color: #32CD32;" data-color="#32CD32"></div> 
+                    <div class="color-box" style="background-color: #FF4500;" data-color="#FF4500"></div> 
+                    <div class="color-box" style="background-color: #DA70D6;" data-color="#DA70D6"></div> 
+                    <div class="color-box" style="background-color: #FFFF00;" data-color="#FFFF00"></div> 
                 </div>
+                <input type="color" id="clock-color" value="#FFFFFF">
             </div>
             
             <div class="setting-item">
@@ -281,11 +270,6 @@
                     <option value="device">ডিভাইস সময় (Device Time)</option>
                     <option value="network">নেটওয়ার্ক সময় (Network Time)</option>
                 </select>
-            </div>
-
-            <div class="setting-item">
-                <input type="checkbox" id="show-date" checked>
-                <label for="show-date" style="display: inline;">তারিখ দেখান (Show Date)</label>
             </div>
             
             <div class="setting-item">
@@ -297,11 +281,11 @@
             </div>
 
             <div class="setting-item">
-                <label for="clock-font">৪. ঘড়ির ফন্ট:</label>
+                <label for="clock-font">৪. ঘড়ির ফন্ট (ডিজিটাল):</label>
                 <select id="clock-font">
                     <option value="Roboto Mono">Roboto Mono</option>
                     <option value="Orbitron">Orbitron</option>
-                    <option value="Digital-7">Digital-7 (যদি ইন্সটল থাকে)</option>
+                    <option value="Digital-7">Digital-7</option>
                 </select>
             </div>
             
@@ -310,62 +294,163 @@
                 <input type="range" id="brightness-range" min="0" max="100" value="100" step="25">
                 <span id="brightness-value">100%</span>
             </div>
+            
+            <div class="setting-item">
+                <input type="checkbox" id="show-date" checked>
+                <label for="show-date">তারিখ দেখান (ডিজিটাল মোড)</label>
+            </div>
+            
+            <div class="setting-item">
+                <input type="checkbox" id="show-battery" checked>
+                <label for="show-battery">ব্যাটারি স্ট্যাটাস দেখান (আমার সুপারিশ)</label>
+            </div>
 
             <button id="start-clock-btn">OK</button>
         </div>
     </div>
 
-    <div id="clock-display">
-        <div id="digital-clock-container">
-            <div id="time">00:00:00</div>
-            <div id="ampm">AM</div>
-        </div>
-        <div id="date">Date</div>
+    <div id="main-display-wrapper">
+        <div id="clock-display">
+            <div id="battery-status"></div>
 
-        <div id="analog-clock">
-            <div id="hour-hand" class="hand"></div>
-            <div id="minute-hand" class="hand"></div>
-            <div id="second-hand" class="hand"></div>
-            <div id="center-dot"></div>
+            <div id="digital-clock-container">
+                <div id="time">00:00:00</div>
+                <div id="ampm">AM</div>
+            </div>
+            <div id="date">Date</div>
+
+            <div id="analog-clock">
+                <div id="hour-hand" class="hand"></div>
+                <div id="minute-hand" class="hand"></div>
+                <div id="second-hand" class="hand"></div>
+                <div id="center-dot"></div>
+                </div>
         </div>
     </div>
 
     <script>
         // JavaScript কোড
         
-        // DOM এলিমেন্টগুলো সিলেক্ট করা
+        // DOM এলিমেন্ট
         const settingsOverlay = document.getElementById('settings-overlay');
         const startBtn = document.getElementById('start-clock-btn');
         const clockDisplay = document.getElementById('clock-display');
+        const displayWrapper = document.getElementById('main-display-wrapper');
+        const batteryStatusEl = document.getElementById('battery-status');
+
+        // ডিজিটাল ক্লক
         const digitalClockContainer = document.getElementById('digital-clock-container');
         const timeEl = document.getElementById('time');
         const ampmEl = document.getElementById('ampm');
         const dateEl = document.getElementById('date');
+
+        // এনালগ ক্লক
         const analogClock = document.getElementById('analog-clock');
         const hourHand = document.getElementById('hour-hand');
         const minuteHand = document.getElementById('minute-hand');
         const secondHand = document.getElementById('second-hand');
-        const centerDot = document.getElementById('center-dot');
 
         // সেটিংস ইনপুট
         const colorInput = document.getElementById('clock-color');
         const colorPalette = document.querySelector('.color-palette');
         const timeSourceSelect = document.getElementById('time-source');
         const showDateCheckbox = document.getElementById('show-date');
+        const showBatteryCheckbox = document.getElementById('show-battery');
         const clockTypeSelect = document.getElementById('clock-type');
         const clockFontSelect = document.getElementById('clock-font');
         const brightnessRange = document.getElementById('brightness-range');
         const brightnessValueSpan = document.getElementById('brightness-value');
 
-        let clockInterval; // ঘড়ি আপডেটের ইন্টারভ্যাল সেভ করার জন্য
-        let timeOffset = 0; // ডিভাইস ও নেটওয়ার্ক টাইমের পার্থক্য
-        let currentFontSize = 20; // ফন্ট জুমের জন্য প্রাথমিক সাইজ (vw)
+        // গ্লোবাল ভ্যারিয়েবল
+        let clockInterval;
+        let timeOffset = 0;
+        let currentFontSize = 25; // ফন্ট জুমের জন্য প্রাথমিক সাইজ (vmin)
+        
+        // === নতুন ফিচার: Wake Lock (স্ক্রিন সজাগ রাখা) ===
+        let screenWakeLock = null;
+
+        // Wake Lock চালু করার ফাংশন
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    screenWakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock is active.');
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            } else {
+                console.warn('Wake Lock API is not supported in this browser.');
+            }
+        };
+
+        // Wake Lock বন্ধ করার ফাংশন
+        const releaseWakeLock = () => {
+            if (screenWakeLock !== null) {
+                screenWakeLock.release();
+                screenWakeLock = null;
+                console.log('Screen Wake Lock released.');
+            }
+        };
+
+        // === নতুন ফিচার: ব্যাটারি স্ট্যাটাস ===
+        let batteryManager = null;
+        
+        const updateBatteryStatus = (battery) => {
+            if (showBatteryCheckbox.checked) {
+                batteryStatusEl.style.display = 'block';
+                const level = (battery.level * 100).toFixed(0);
+                const chargingStatus = battery.charging ? '(Charging) 🔌' : '(Discharging) 🔋';
+                batteryStatusEl.textContent = `${level}% ${chargingStatus}`;
+            } else {
+                batteryStatusEl.style.display = 'none';
+            }
+        };
+        
+        const initBatteryMonitor = async () => {
+            if ('getBattery' in navigator) {
+                try {
+                    batteryManager = await navigator.getBattery();
+                    updateBatteryStatus(batteryManager);
+                    batteryManager.addEventListener('chargingchange', () => updateBatteryStatus(batteryManager));
+                    batteryManager.addEventListener('levelchange', () => updateBatteryStatus(batteryManager));
+                } catch (err) {
+                    console.error('Battery Status API error:', err);
+                }
+            } else {
+                console.warn('Battery Status API not supported.');
+            }
+        };
+
+        const stopBatteryMonitor = () => {
+            if (batteryManager) {
+                batteryManager.removeEventListener('chargingchange', () => updateBatteryStatus(batteryManager));
+                batteryManager.removeEventListener('levelchange', () => updateBatteryStatus(batteryManager));
+                batteryManager = null;
+                batteryStatusEl.style.display = 'none';
+            }
+        };
+
+        // === এনালগ ঘড়ির সংখ্যা তৈরি করা ===
+        function createAnalogClockFace() {
+            // আগের সংখ্যাগুলো মুছে ফেলা (যদি থাকে)
+            analogClock.querySelectorAll('.number').forEach(n => n.remove());
+            
+            for (let i = 1; i <= 12; i++) {
+                const numberEl = document.createElement('div');
+                numberEl.classList.add('number');
+                numberEl.textContent = i;
+                // সংখ্যাগুলোকে বৃত্তাকারে ঘোরানো
+                numberEl.style.transform = `rotate(${i * 30}deg)`;
+                analogClock.appendChild(numberEl);
+            }
+        }
 
         // Local Storage থেকে সেটিংস লোড করা
         function loadSettings() {
             const savedColor = localStorage.getItem('clockColor') || '#FFFFFF';
             const savedTimeSource = localStorage.getItem('timeSource') || 'device';
             const savedShowDate = localStorage.getItem('showDate') === 'true';
+            const savedShowBattery = localStorage.getItem('showBattery') === 'true';
             const savedClockType = localStorage.getItem('clockType') || 'digital';
             const savedClockFont = localStorage.getItem('clockFont') || 'Roboto Mono';
             const savedBrightness = localStorage.getItem('brightness') || '100';
@@ -373,16 +458,14 @@
             colorInput.value = savedColor;
             timeSourceSelect.value = savedTimeSource;
             showDateCheckbox.checked = savedShowDate;
+            showBatteryCheckbox.checked = savedShowBattery;
             clockTypeSelect.value = savedClockType;
             clockFontSelect.value = savedClockFont;
             brightnessRange.value = savedBrightness;
             brightnessValueSpan.textContent = savedBrightness + '%';
             
-            // কালার প্যালেট নির্বাচন আপডেট করা
             updateColorPaletteSelection(savedColor);
-            
-            // ব্রাইটনেস ক্লাস যোগ করা
-            document.body.className = `dim-${savedBrightness}`;
+            displayWrapper.className = `dim-${savedBrightness}`;
         }
         
         // কালার প্যালেট থেকে কালার সিলেক্ট করা
@@ -397,58 +480,50 @@
 
         function updateColorPaletteSelection(selectedColor) {
             document.querySelectorAll('.color-box').forEach(box => {
-                if (box.dataset.color === selectedColor) {
-                    box.classList.add('selected');
-                } else {
-                    box.classList.remove('selected');
-                }
+                box.classList.toggle('selected', box.dataset.color === selectedColor);
             });
         }
         
-        // উজ্জ্বলতা স্লাইডার আপডেট হলে
+        // উজ্জ্বলতা স্লাইডার
         brightnessRange.addEventListener('input', () => {
             const brightness = brightnessRange.value;
             brightnessValueSpan.textContent = brightness + '%';
-            document.body.className = `dim-${brightness}`;
-            localStorage.setItem('brightness', brightness); // Local Storage-এ সেভ করা
+            displayWrapper.className = `dim-${brightness}`;
+            localStorage.setItem('brightness', brightness);
         });
 
 
         // OK বাটনে ক্লিক করলে
         startBtn.addEventListener('click', async () => {
-            // ১. সেটিংস ভ্যালুগুলো পড়া
+            // ১. সেটিংস ভ্যালুগুলো পড়া ও সেভ করা
             const selectedColor = colorInput.value;
             const timeSource = timeSourceSelect.value;
             const showDate = showDateCheckbox.checked;
+            const showBattery = showBatteryCheckbox.checked;
             const clockType = clockTypeSelect.value;
             const clockFont = clockFontSelect.value;
             const currentBrightness = brightnessRange.value;
 
-            // Local Storage-এ সেটিংস সেভ করা
             localStorage.setItem('clockColor', selectedColor);
             localStorage.setItem('timeSource', timeSource);
             localStorage.setItem('showDate', showDate);
+            localStorage.setItem('showBattery', showBattery);
             localStorage.setItem('clockType', clockType);
             localStorage.setItem('clockFont', clockFont);
             localStorage.setItem('brightness', currentBrightness);
 
             // ২. সেটিংস অ্যাপ্লাই করা
-            applyClockSettings(selectedColor, showDate, clockType, clockFont);
+            applyClockSettings(selectedColor, showDate, clockType, clockFont, showBattery);
             
-            // ৩. নেটওয়ার্ক টাইম ম্যানেজ করা
-            timeOffset = 0; // রিসেট
+            // ৩. নেটওয়ার্ক টাইম ম্যানেজ করা (আগের মতোই)
+            timeOffset = 0;
             if (timeSource === 'network') {
                 try {
-                    // World Time API থেকে সময় আনা হচ্ছে
                     const response = await fetch('https://worldtimeapi.org/api/ip');
                     const data = await response.json();
-                    
-                    // সার্ভার টাইম এবং বর্তমান ডিভাইস টাইমের মধ্যে পার্থক্য (মিলিসেকেন্ডে)
                     const serverTime = new Date(data.utc_datetime).getTime();
                     const localTime = new Date().getTime();
                     timeOffset = serverTime - localTime;
-                    
-                    // alert('Network time synced successfully!'); // ডিবাগিং এর জন্য
                 } catch (error) {
                     console.error('Failed to fetch network time:', error);
                     alert('নেটওয়ার্ক সময় আনতে ব্যর্থ। ডিভাইস সময় দেখানো হচ্ছে।');
@@ -461,44 +536,37 @@
             // ৫. ফুল-স্ক্রিন এবং ল্যান্ডস্কেপ মোড চালু করা
             requestFullScreen();
             lockLandscape();
+            
+            // === নতুন ফিচার চালু ===
+            await requestWakeLock(); // স্ক্রিন সজাগ রাখা
+            if (showBattery) {
+                initBatteryMonitor(); // ব্যাটারি মনিটর চালু
+            }
 
             // ৬. ঘড়ি চালু করা
             startClock();
         });
 
         // সেটিংস অ্যাপ্লাই করার ফাংশন
-        function applyClockSettings(selectedColor, showDate, clockType, clockFont) {
-            clockDisplay.style.color = selectedColor;
-            analogClock.style.borderColor = selectedColor; // এনালগ ঘড়ির বর্ডার কালার
-            centerDot.style.backgroundColor = selectedColor; // এনালগ ঘড়ির মাঝখানের ডট
-            dateEl.style.display = showDate ? 'block' : 'none';
+        function applyClockSettings(color, showDate, clockType, font, showBattery) {
+            clockDisplay.style.color = color;
+            batteryStatusEl.style.display = showBattery ? 'block' : 'none';
 
             // ফন্ট সেট করা
-            timeEl.className = ''; // সব ফন্ট ক্লাস মুছে ফেলা
-            if (clockFont === 'Roboto Mono') {
-                timeEl.classList.add('font-roboto-mono');
-                dateEl.classList.add('font-roboto-mono');
-            } else if (clockFont === 'Orbitron') {
-                timeEl.classList.add('font-orbitron');
-                dateEl.classList.add('font-orbitron');
-            } else if (clockFont === 'Digital-7') {
-                timeEl.classList.add('font-digital-7');
-                dateEl.classList.add('font-digital-7');
-            } else {
-                timeEl.classList.add('font-roboto-mono'); // ডিফল্ট
-                dateEl.classList.add('font-roboto-mono'); // ডিফল্ট
-            }
-
+            const fontClass = font.toLowerCase().replace(' ', '-');
+            timeEl.className = `font-${fontClass}`;
+            dateEl.className = `font-${fontClass}`;
 
             // ঘড়ির ধরন (ডিজিটাল/এনালগ)
             if (clockType === 'digital') {
                 digitalClockContainer.style.display = 'flex';
-                dateEl.style.display = showDate ? 'block' : 'none'; // ডিজিটাল মোডে তারিখ দেখাবে
+                dateEl.style.display = showDate ? 'block' : 'none';
                 analogClock.style.display = 'none';
             } else {
                 digitalClockContainer.style.display = 'none';
-                dateEl.style.display = 'none'; // এনালগ মোডে তারিখ লুকানো
+                dateEl.style.display = 'none';
                 analogClock.style.display = 'block';
+                analogClock.style.borderColor = color; // এনালগ ঘড়ির বর্ডার কালার
             }
         }
 
@@ -511,115 +579,106 @@
             const minutes = padZero(now.getMinutes());
             const seconds = padZero(now.getSeconds());
             const ampm = hours >= 12 ? 'PM' : 'AM';
-
-            hours = hours % 12;
-            hours = hours ? hours : 12; // 0 بجাকে 12 দেখানো
+            hours = hours % 12 || 12;
             
             timeEl.textContent = `${padZero(hours)}:${minutes}:${seconds}`;
             ampmEl.textContent = ampm;
             dateEl.textContent = now.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
             });
 
             // এনালগ ঘড়ি আপডেট
-            const secDeg = (now.getSeconds() / 60) * 360 + 90;
-            const minDeg = (now.getMinutes() / 60) * 360 + (now.getSeconds() / 60) * 6 + 90;
-            const hrDeg = (now.getHours() / 12) * 360 + (now.getMinutes() / 60) * 30 + 90;
+            const sec = now.getSeconds();
+            const min = now.getMinutes();
+            const hr = now.getHours();
             
-            secondHand.style.transform = `rotate(${secDeg}deg)`;
-            minuteHand.style.transform = `rotate(${minDeg}deg)`;
-            hourHand.style.transform = `rotate(${hrDeg}deg)`;
+            const secDeg = (sec / 60) * 360;
+            const minDeg = (min / 60) * 360 + (sec / 60) * 6;
+            const hrDeg = (hr / 12) * 360 + (min / 60) * 30;
+            
+            // CSS এ 90deg ডিফল্ট অফসেট থাকে, তাই এখানে যোগ করার দরকার নেই 
+            // *সংশোধন: আমার CSS এ 0deg (সোজা উপরে) কে 12টা ধরে করা হয়নি, তাই 90deg যোগ করতে হবে।
+            // *পুনঃ সংশোধন: কাঁটাগুলো CSS এ `top` দিয়ে সেট করা হয়েছে, তাই 0deg হলো 12টা। 90deg লাগবে না।
+            // *চূড়ান্ত সংশোধন: `transform-origin: bottom center` দিয়েছি, তাই 0deg হলো 6টা। 180deg যোগ করতে হবে।
+            // না, সবচেয়ে সহজ উপায় হলো কাঁটাগুলোকে 12টার দিকে মুখ করে রাখা (top: 50%, height: 50%) এবং 0deg কে 12টা ধরা।
+            // বর্তমান CSS অনুযায়ী (top: 10% ইত্যাদি), 0deg হলো 6টা।
+            // *সহজ সমাধান:* কাঁটাগুলোর CSS `transform` এ `rotate(Xdeg)` এর বদলে JS থেকে `transform: rotate(Xdeg)` সেট করবো।
+            
+            // কাঁটাগুলো 12টার দিকে মুখ করে আছে (ডিফল্ট) ধরে নিয়ে:
+            const secDegJS = (sec / 60) * 360;
+            const minDegJS = (min / 60) * 360 + (sec / 60) * 6;
+            const hrDegJS = (hr / 12) * 360 + (min / 60) * 30;
+
+            secondHand.style.transform = `rotate(${secDegJS}deg)`;
+            minuteHand.style.transform = `rotate(${minDegJS}deg)`;
+            hourHand.style.transform = `rotate(${hrDegJS}deg)`;
         }
 
         // ঘড়ি চালু করা (১ সেকেন্ড পর পর আপডেট)
         function startClock() {
-            if (clockInterval) {
-                clearInterval(clockInterval);
-            }
+            if (clockInterval) clearInterval(clockInterval);
             updateClock();
             clockInterval = setInterval(updateClock, 1000);
         }
 
-        // সংখ্যার আগে '0' বসানোর ফাংশন (যেমন: 5 -> 05)
         function padZero(num) {
             return num < 10 ? '0' + num : num;
         }
 
-        // --- ফুল-স্ক্রিন এবং ল্যান্ডস্কেপ ফাংশন (আগের মতোই) ---
+        // --- ফুল-স্ক্রিন এবং ল্যান্ডস্কেপ ফাংশন ---
         function requestFullScreen() {
             const elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.mozRequestFullScreen) {
-                elem.mozRequestFullScreen();
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
+            if (elem.requestFullscreen) elem.requestFullscreen();
+            else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+            else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+            else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
         }
-
         function lockLandscape() {
             try {
                 if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(err => {
-                        console.warn('Could not lock orientation:', err);
-                    });
+                    screen.orientation.lock('landscape').catch(err => console.warn(err));
                 }
             } catch (error) {
                 console.warn('Screen orientation lock not supported.', error);
             }
         }
 
-        // --- অতিরিক্ত ফিচার: ডাবল-ক্লিক করে সেটিংস রি-ওপেন করা ---
+        // --- ডাবল-ক্লিক করে সেটিংস রি-ওপেন করা ---
         clockDisplay.addEventListener('dblclick', () => {
             settingsOverlay.style.display = 'flex';
-            if (clockInterval) {
-                clearInterval(clockInterval);
-            }
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
-            if (screen.orientation && screen.orientation.unlock) {
-                screen.orientation.unlock();
-            }
-            // সেটিংস মেনু খোলার সময় বর্তমান সেটিংস লোড করা
-            loadSettings();
-            // বর্তমান ব্রাইটনেস ক্লাস অপসারণ করা
-            document.body.className = '';
-        });
-
-        // --- অতিরিক্ত ফিচার: স্ক্রল করে ফন্ট সাইজ কন্ট্রোল ---
-        clockDisplay.addEventListener('wheel', (event) => {
-            event.preventDefault(); // ডিফল্ট স্ক্রল আচরণ বন্ধ করা
+            if (clockInterval) clearInterval(clockInterval);
+            if (document.exitFullscreen) document.exitFullscreen();
+            if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
             
-            // ডিজিটাল ঘড়ি চালু থাকলে ফন্ট সাইজ পরিবর্তন করুন
+            // === নতুন ফিচার বন্ধ করা ===
+            releaseWakeLock(); // Wake Lock বন্ধ করা
+            stopBatteryMonitor(); // ব্যাটারি মনিটর বন্ধ করা
+
+            loadSettings();
+            displayWrapper.className = ''; // ব্রাইটনেস রিসেট
+        });
+
+        // --- স্ক্রল করে ফন্ট সাইজ কন্ট্রোল ---
+        clockDisplay.addEventListener('wheel', (event) => {
+            event.preventDefault();
             if (clockTypeSelect.value === 'digital') {
-                const zoomFactor = 0.5; // কত দ্রুত জুম হবে
+                const zoomFactor = 1; // জুম স্পিড (vmin)
                 if (event.deltaY < 0) {
-                    // স্ক্রল আপ - জুম ইন (ফন্ট বড়)
-                    currentFontSize = Math.min(30, currentFontSize + zoomFactor);
+                    currentFontSize = Math.min(35, currentFontSize + zoomFactor); // সর্বোচ্চ 35vmin
                 } else {
-                    // স্ক্রল ডাউন - জুম আউট (ফন্ট ছোট)
-                    currentFontSize = Math.max(5, currentFontSize - zoomFactor);
+                    currentFontSize = Math.max(10, currentFontSize - zoomFactor); // সর্বনিম্ন 10vmin
                 }
-                timeEl.style.fontSize = `${currentFontSize}vw`;
-                ampmEl.style.fontSize = `${currentFontSize / 4}vw`; // AM/PM ফন্ট সাইজও আনুপাতিকভাবে পরিবর্তন
-                dateEl.style.fontSize = `${currentFontSize / 3}vw`; // তারিখের ফন্ট সাইজও আনুপাতিকভাবে পরিবর্তন
+                // নতুন vmin সাইজ অ্যাপ্লাই করা
+                timeEl.style.fontSize = `${currentFontSize}vmin`;
+                ampmEl.style.fontSize = `${currentFontSize / 4}vmin`;
+                dateEl.style.fontSize = `${currentFontSize / 3.5}vmin`;
             }
         });
         
-        // প্রাথমিক সেটিংস লোড
+        // প্রাথমিক সেটআপ
         loadSettings();
+        createAnalogClockFace(); // এনালগ ঘড়ির সংখ্যা তৈরি করা
         
-        // এনালগ ঘড়ির জন্য একটি ফন্ট অ্যাড করা যদি 'Digital-7' না থাকে।
-        // এটি একটি ফন্ট ফ্যামিলি যা ডাউনলোড করা যায়। এখানে শুধু নাম দেওয়া হয়েছে।
-        // প্রোডাকশন অ্যাপ্লিকেশনের জন্য আপনাকে ফন্ট ফাইল (.ttf, .woff) যোগ করতে হবে এবং @font-face রুল ব্যবহার করতে হবে।
-        // অথবা Google Fonts থেকে Digital-7 এর কাছাকাছি কোন ফন্ট বেছে নিতে পারেন।
-
     </script>
 </body>
 </html>
