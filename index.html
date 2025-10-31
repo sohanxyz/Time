@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen Clock</title>
+    <style>
+        /* CSS কোড */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            background: #000000; /* ১০০% কালো ব্যাগরাউন্ড */
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden; /* স্ক্রলবার হাইড করার জন্য */
+        }
+
+        /* সেটিংস পপ-আপ (Overlay) */
+        #settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 30, 30, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #settings-box {
+            background: #ffffff;
+            color: #333;
+            padding: 25px;
+            border-radius: 8px;
+            width: 300px;
+            font-family: Arial, sans-serif;
+        }
+
+        #settings-box h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .setting-item {
+            margin-bottom: 15px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        /* ইনপুট ফিল্ড স্টাইল */
+        input[type="color"],
+        select,
+        button {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        input[type="color"] {
+            height: 40px;
+        }
+
+        /* ওকে বাটন */
+        #start-clock-btn {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        #start-clock-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* মূল ঘড়ির ডিসপ্লে */
+        #clock-display {
+            width: 100%;
+            height: 100vh; /* Viewport Height (সম্পূর্ণ স্ক্রিন) */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer; /* ডাবল-ক্লিক করার ইঙ্গিত */
+        }
+
+        #time {
+            font-size: 20vw; /* স্ক্রিনের প্রস্থের উপর ভিত্তি করে ফন্ট সাইজ */
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        #date {
+            font-size: 5vw;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="settings-overlay">
+        <div id="settings-box">
+            <h2>Clock Settings</h2>
+            
+            <div class="setting-item">
+                <label for="clock-color">১. ঘড়ির কালার সিলেক্ট:</label>
+                <input type="color" id="clock-color" value="#FFFFFF">
+            </div>
+            
+            <div class="setting-item">
+                <label for="time-source">২. সময় দেখুন:</label>
+                <select id="time-source">
+                    <option value="device" selected>ডিভাইস সময় (Device Time)</option>
+                    <option value="network">নেটওয়ার্ক সময় (Network Time)</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <input type="checkbox" id="show-date" checked>
+                <label for="show-date" style="display: inline;">তারিখ দেখান (Show Date)</label>
+            </div>
+
+            <button id="start-clock-btn">OK</button>
+        </div>
+    </div>
+
+    <div id="clock-display">
+        <div id="time">00:00:00</div>
+        <div id="date">Date</div>
+    </div>
+
+    <script>
+        // JavaScript কোড
+        
+        // DOM এলিমেন্টগুলো সিলেক্ট করা
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const startBtn = document.getElementById('start-clock-btn');
+        const clockDisplay = document.getElementById('clock-display');
+        const timeEl = document.getElementById('time');
+        const dateEl = document.getElementById('date');
+
+        // সেটিংস ইনপুট
+        const colorInput = document.getElementById('clock-color');
+        const timeSourceSelect = document.getElementById('time-source');
+        const showDateCheckbox = document.getElementById('show-date');
+
+        let clockInterval; // ঘড়ি আপডেটের ইন্টারভ্যাল সেভ করার জন্য
+        let timeOffset = 0; // ডিভাইস ও নেটওয়ার্ক টাইমের পার্থক্য
+
+        // OK বাটনে ক্লিক করলে
+        startBtn.addEventListener('click', async () => {
+            // ১. সেটিংস ভ্যালুগুলো পড়া
+            const selectedColor = colorInput.value;
+            const timeSource = timeSourceSelect.value;
+            const showDate = showDateCheckbox.checked;
+
+            // ২. সেটিংস অ্যাপ্লাই করা
+            clockDisplay.style.color = selectedColor;
+            dateEl.style.display = showDate ? 'block' : 'none';
+
+            // ৩. নেটওয়ার্ক টাইম ম্যানেজ করা
+            timeOffset = 0; // রিসেট
+            if (timeSource === 'network') {
+                try {
+                    // World Time API থেকে সময় আনা হচ্ছে
+                    const response = await fetch('https://worldtimeapi.org/api/ip');
+                    const data = await response.json();
+                    
+                    // সার্ভার টাইম এবং বর্তমান ডিভাইস টাইমের মধ্যে পার্থক্য (মিলিসেকেন্ডে)
+                    const serverTime = new Date(data.utc_datetime).getTime();
+                    const localTime = new Date().getTime();
+                    timeOffset = serverTime - localTime;
+                    
+                    alert('Network time synced successfully!');
+
+                } catch (error) {
+                    console.error('Failed to fetch network time:', error);
+                    alert('নেটওয়ার্ক সময় আনতে ব্যর্থ। ডিভাইস সময় দেখানো হচ্ছে।');
+                }
+            }
+
+            // ৪. সেটিংস মেনু হাইড করা
+            settingsOverlay.style.display = 'none';
+
+            // ৫. ফুল-স্ক্রিন এবং ল্যান্ডস্কেপ মোড চালু করা
+            requestFullScreen();
+            lockLandscape();
+
+            // ৬. ঘড়ি চালু করা
+            startClock();
+        });
+
+        // ঘড়ি আপডেট করার মূল ফাংশন
+        function updateClock() {
+            // 'timeOffset' ব্যবহার করে সঠিক সময় গণনা
+            const now = new Date(new Date().getTime() + timeOffset);
+
+            let hours = now.getHours();
+            const minutes = padZero(now.getMinutes());
+            const seconds = padZero(now.getSeconds());
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            // ১২-ঘণ্টা ফরম্যাট
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 0 بجাকে 12 দেখানো
+            
+            // DOM আপডেট
+            timeEl.textContent = `${padZero(hours)}:${minutes}:${seconds} ${ampm}`;
+            dateEl.textContent = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // ঘড়ি চালু করা (১ সেকেন্ড পর পর আপডেট)
+        function startClock() {
+            // পুরনো ইন্টারভ্যাল (যদি থাকে) বন্ধ করা
+            if (clockInterval) {
+                clearInterval(clockInterval);
+            }
+            
+            updateClock(); // সাথে সাথে একবার আপডেট
+            clockInterval = setInterval(updateClock, 1000); // প্রতি সেকেন্ডে আপডেট
+        }
+
+        // সংখ্যার আগে '0' বসানোর ফাংশন (যেমন: 5 -> 05)
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        // --- অতিরিক্ত ফিচার: ফুল-স্ক্রিন এবং ল্যান্ডস্কেপ ---
+
+        // ফুল-স্ক্রিন করার ফাংশন
+        function requestFullScreen() {
+            const elem = document.documentElement; // পুরো HTML ডকুমেন্ট
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // Firefox
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { // Chrome, Safari
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // IE/Edge
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // ল্যান্ডস্কেপ মোড লক করার ফাংশন (শুধুমাত্র মোবাইল ডিভাইসে কাজ করবে)
+        function lockLandscape() {
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(err => {
+                        console.warn('Could not lock orientation:', err);
+                    });
+                }
+            } catch (error) {
+                console.warn('Screen orientation lock not supported.', error);
+            }
+        }
+
+        // --- রিকমেন্ডেশন: ডাবল-ক্লিক করে সেটিংস রি-ওপেন করা ---
+        clockDisplay.addEventListener('dblclick', () => {
+            // সেটিংস মেনু দেখানো
+            settingsOverlay.style.display = 'flex';
+            
+            // ঘড়ি বন্ধ করা
+            if (clockInterval) {
+                clearInterval(clockInterval);
+            }
+
+            // ফুল-স্ক্রিন থেকে বের হওয়া
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+
+            // ল্যান্ডস্কেপ আনলক করা
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        });
+
+    </script>
+</body>
+</html>
